@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Shift Calendar Sept-Dec 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 1px;
+            background-color: #e5e7eb;
+        }
+        .calendar-day {
+            background-color: white;
+            padding: 0.5rem;
+            min-height: 100px;
+            border: 1px solid #e5e7eb;
+        }
+        .calendar-day.weekend {
+            background-color: #f3f4f6;
+        }
+        .calendar-day.header {
+            background-color: #d1d5db;
+            font-weight: bold;
+            text-align: center;
+            padding: 0.5rem;
+        }
+        .employee-chip {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            margin: 0.2rem;
+            border-radius: 0.25rem;
+            color: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        .employee-chip.grayed {
+            background-color: #9ca3af !important;
+        }
+        .employee-chip.legend-selected {
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <h1 class="text-3xl font-bold text-center mb-6">Employee Shift Calendar (Sept-Dec 2025)</h1>
+    <p class="text-center mb-4">Each weekday shows scheduled employees (a-h) with unique colors. Click an employee in the legend to gray out others.</p>
+
+    <!-- Legend -->
+    <div class="mb-6">
+        <h3 class="text-xl font-semibold mb-2">Employee Color Legend</h3>
+        <div class="flex flex-wrap gap-2" id="legend">
+            <span class="employee-chip bg-blue-500" data-employee="a" onclick="toggleEmployee('a')">a</span>
+            <span class="employee-chip bg-red-500" data-employee="b" onclick="toggleEmployee('b')">b</span>
+            <span class="employee-chip bg-green-500" data-employee="c" onclick="toggleEmployee('c')">c</span>
+            <span class="employee-chip bg-yellow-500" data-employee="d" onclick="toggleEmployee('d')">d</span>
+            <span class="employee-chip bg-purple-500" data-employee="e" onclick="toggleEmployee('e')">e</span>
+            <span class="employee-chip bg-pink-500" data-employee="f" onclick="toggleEmployee('f')">f</span>
+            <span class="employee-chip bg-indigo-500" data-employee="g" onclick="toggleEmployee('g')">g</span>
+            <span class="employee-chip bg-orange-500" data-employee="h" onclick="toggleEmployee('h')">h</span>
+        </div>
+    </div>
+
+    <div id="calendars"></div>
+
+    <script>
+        // Employee shift schedule data
+        const employeeSchedules = {
+            a: ['2025-09-12', '2025-09-15', '2025-09-24', '2025-09-25', '2025-10-01', '2025-10-09', '2025-10-13', '2025-10-17', '2025-10-22', '2025-11-25', '2025-11-26', '2025-12-02', '2025-12-05', '2025-12-11', '2025-12-19'],
+            b: ['2025-09-03', '2025-09-11', '2025-09-17', '2025-09-19', '2025-09-29', '2025-10-02', '2025-10-09', '2025-10-10', '2025-10-16', '2025-10-30', '2025-11-07', '2025-11-13', '2025-12-16', '2025-12-18', '2025-12-19', '2025-12-22', '2025-12-29'],
+            c: ['2025-09-12', '2025-09-18', '2025-09-25', '2025-10-01', '2025-10-15', '2025-10-20', '2025-10-21', '2025-10-31', '2025-11-05', '2025-11-13', '2025-11-24', '2025-11-25', '2025-12-03', '2025-12-11', '2025-12-15', '2025-12-24', '2025-12-25'],
+            d: ['2025-09-03', '2025-09-10', '2025-09-15', '2025-09-18', '2025-09-23', '2025-09-24', '2025-09-30', '2025-10-06', '2025-10-23', '2025-10-24', '2025-10-28', '2025-11-04', '2025-11-10', '2025-11-11', '2025-11-17', '2025-12-01', '2025-12-04', '2025-12-09', '2025-12-17', '2025-12-23', '2025-12-31'],
+            e: ['2025-09-04', '2025-09-05', '2025-09-08', '2025-10-07', '2025-10-08', '2025-10-15', '2025-10-21', '2025-10-23', '2025-10-27', '2025-10-28', '2025-11-07', '2025-11-11', '2025-11-13', '2025-11-18', '2025-11-19', '2025-12-01', '2025-12-02', '2025-12-04', '2025-12-09', '2025-12-12', '2025-12-16', '2025-12-18', '2025-12-22', '2025-12-23', '2025-12-30'],
+            f: ['2025-09-02', '2025-09-05', '2025-09-09', '2025-09-15', '2025-09-22', '2025-09-26', '2025-10-02', '2025-10-07', '2025-10-16', '2025-10-20', '2025-10-24', '2025-10-31', '2025-11-03', '2025-11-10', '2025-11-16', '2025-11-20', '2025-11-24', '2025-11-27', '2025-11-28', '2025-12-08', '2025-12-10', '2025-12-12', '2025-12-29'],
+            g: ['2025-09-01', '2025-09-02', '2025-09-04', '2025-09-10', '2025-09-16', '2025-09-22', '2025-09-26', '2025-09-29', '2025-09-30', '2025-10-06', '2025-10-08', '2025-10-13', '2025-10-22', '2025-10-27', '2025-10-29', '2025-11-02', '2025-11-09', '2025-11-17', '2025-11-18', '2025-11-19', '2025-11-20', '2025-11-23', '2025-12-03', '2025-12-08', '2025-12-17', '2025-12-24', '2025-12-25', '2025-12-26', '2025-12-31'],
+            h: ['2025-09-09', '2025-09-11', '2025-09-16', '2025-09-17', '2025-09-19', '2025-09-23', '2025-10-03', '2025-10-14', '2025-10-17', '2025-10-29', '2025-10-30', '2025-11-04', '2025-11-09', '2025-11-13', '2025-11-16', '2025-11-26', '2025-12-05', '2025-12-10', '2025-12-15', '2025-12-26', '2025-12-30']
+        };
+
+        // Color mapping for employees
+        const employeeColors = {
+            a: 'bg-blue-500',
+            b: 'bg-red-500',
+            c: 'bg-green-500',
+            d: 'bg-yellow-500',
+            e: 'bg-purple-500',
+            f: 'bg-pink-500',
+            g: 'bg-indigo-500',
+            h: 'bg-orange-500'
+        };
+
+        // Track selected employee
+        let selectedEmployee = null;
+
+        // Function to generate calendar for a given month
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month - 1, 1);
+            const lastDay = new Date(year, month, 0);
+            const daysInMonth = lastDay.getDate();
+            const startDayOfWeek = firstDay.getDay();
+            const monthName = firstDay.toLocaleString('default', { month: 'long' });
+
+            let html = `<h2 class="text-2xl font-semibold mt-8 mb-4">${monthName} ${year}</h2>`;
+            html += '<div class="calendar-grid">';
+            const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            daysOfWeek.forEach(day => {
+                html += `<div class="calendar-day header">${day}</div>`;
+            });
+
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < startDayOfWeek; i++) {
+                html += '<div class="calendar-day"></div>';
+            }
+
+            // Process each day of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month - 1, day);
+                const dateStr = date.toISOString().split('T')[0];
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                let employees = [];
+
+                // Find employees scheduled on this date
+                Object.keys(employeeSchedules).forEach(emp => {
+                    if (employeeSchedules[emp].includes(dateStr)) {
+                        employees.push(emp);
+                    }
+                });
+
+                // Sort employees alphabetically for consistent display
+                employees.sort();
+
+                // Add day cell
+                html += `<div class="calendar-day ${isWeekend ? 'weekend' : ''}">${day}`;
+                if (!isWeekend && employees.length > 0) {
+                    html += '<br>';
+                    employees.forEach(emp => {
+                        const colorClass = selectedEmployee && emp !== selectedEmployee ? 'grayed' : employeeColors[emp];
+                        html += `<span class="employee-chip ${colorClass}" data-employee="${emp}">${emp}</span>`;
+                    });
+                }
+                html += '</div>';
+            }
+
+            // Add empty cells to complete the grid
+            const totalCells = startDayOfWeek + daysInMonth;
+            const remainingCells = (7 - (totalCells % 7)) % 7;
+            for (let i = 0; i < remainingCells; i++) {
+                html += '<div class="calendar-day"></div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        // Function to toggle employee selection
+        function toggleEmployee(employee) {
+            if (selectedEmployee === employee) {
+                // Deselect if the same employee is clicked
+                selectedEmployee = null;
+            } else {
+                // Select the new employee
+                selectedEmployee = employee;
+            }
+
+            // Update legend to show selected employee
+            const legendItems = document.querySelectorAll('#legend .employee-chip');
+            legendItems.forEach(item => {
+                if (item.getAttribute('data-employee') === selectedEmployee) {
+                    item.classList.add('legend-selected');
+                } else {
+                    item.classList.remove('legend-selected');
+                }
+            });
+
+            // Regenerate calendars with updated colors
+            const calendarsContainer = document.getElementById('calendars');
+            calendarsContainer.innerHTML = '';
+            for (let month = 9; month <= 12; month++) {
+                calendarsContainer.innerHTML += generateCalendar(2025, month);
+            }
+        }
+
+        // Initial calendar generation
+        const calendarsContainer = document.getElementById('calendars');
+        for (let month = 9; month <= 12; month++) {
+            calendarsContainer.innerHTML += generateCalendar(2025, month);
+        }
+    </script>
+</body>
+</html>
