@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Shift Calendar Sept 2025</title>
+    <title>Employee Shift Calendar Sept-Dec 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .calendar-grid {
@@ -58,7 +58,7 @@
     </style>
 </head>
 <body class="bg-gray-100 p-6">
-    <h1 class="text-3xl font-bold text-center mb-6">Employee Shift Calendar (Sept 2025)</h1>
+    <h1 class="text-3xl font-bold text-center mb-6">Employee Shift Calendar (Sept-Dec 2025)</h1>
     <p class="text-center mb-4">Click a weekday to toggle employee 'a's schedule. Click an employee in the legend to gray out others. Click 'Show Updated Schedule' to view employee 'a's current schedule.</p>
     <div id="error-message">Failed to load schedule data. Please check the CSV file.</div>
     <button id="show-schedule" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600">Show Updated Schedule for Employee 'a'</button>
@@ -125,7 +125,7 @@
 
         // Function to toggle employee 'a's schedule on a date
         function toggleDate(year, month, day) {
-            const date = new Date(year, month - 1, day +1);
+            const date = new Date(year, month - 1, day + );
             const dateStr = date.toISOString().split('T')[0];
             const dayOfWeek = date.getDay();
             console.log(`Clicked date: ${dateStr}, Day of week: ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]}`);
@@ -167,7 +167,7 @@
 
             // Process each day of the month
             for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month - 1, day+1);
+                const date = new Date(year, month - 1, day+1 );
                 const dateStr = date.toISOString().split('T')[0];
                 const dayOfWeek = date.getDay();
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 1;
@@ -217,9 +217,10 @@
         function generateCalendars() {
             const calendarsContainer = document.getElementById('calendars');
             calendarsContainer.innerHTML = '';
-            // Only generate September 2025 for reduced test data
-            generateCalendar(2025, 9);
-            calendarsContainer.innerHTML += generateCalendar(2025, 9);
+            // Generate calendars for September to December 2025
+            for (let month = 9; month <= 12; month++) {
+                calendarsContainer.innerHTML += generateCalendar(2025, month);
+            }
         }
 
         // Function to toggle employee selection for gray-out
