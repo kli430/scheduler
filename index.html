@@ -125,13 +125,13 @@
 
         // Function to toggle employee 'a's schedule on a date
         function toggleDate(year, month, day) {
-            const date = new Date(year, month - 1, day);
+            const date = new Date(year, month - 1, day +1);
             const dateStr = date.toISOString().split('T')[0];
             const dayOfWeek = date.getDay();
             console.log(`Clicked date: ${dateStr}, Day of week: ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]}`);
 
             // Only allow toggling on weekdays (Mon-Fri: 1-5)
-            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+            if (dayOfWeek >= 2 && dayOfWeek <= 6) {
                 const index = employeeSchedules['a'].indexOf(dateStr);
                 if (index === -1) {
                     employeeSchedules['a'].push(dateStr);
@@ -167,10 +167,10 @@
 
             // Process each day of the month
             for (let day = 1; day <= daysInMonth; day++) {
-                const date = new Date(year, month - 1, day);
+                const date = new Date(year, month - 1, day+1);
                 const dateStr = date.toISOString().split('T')[0];
                 const dayOfWeek = date.getDay();
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 1;
                 let employees = [];
 
                 // Find employees scheduled on this date
