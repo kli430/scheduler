@@ -55,13 +55,20 @@
             text-align: center;
             margin-bottom: 1rem;
         }
+        #no-employee-message {
+            display: none;
+            color: red;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-6">
     <h1 class="text-3xl font-bold text-center mb-6">Employee Shift Calendar (Sept-Dec 2025)</h1>
-    <p class="text-center mb-4">Click a weekday to toggle employee 'a's schedule. Click an employee in the legend to gray out others. Click 'Show Updated Schedule' to view employee 'a's current schedule.</p>
+    <p class="text-center mb-4">Click an employee in the legend to select them, then click a weekday to toggle their schedule. Click the same employee again to deselect. Click 'Show Updated Schedules' to view all employees' current schedules.</p>
     <div id="error-message">Failed to load schedule data. Please check the CSV file.</div>
-    <button id="show-schedule" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600">Show Updated Schedule for Employee 'a'</button>
+    <div id="no-employee-message">Please select an employee from the legend to edit their schedule.</div>
+    <button id="show-schedule" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600">Show Updated Schedules for All Employees</button>
 
     <!-- Legend -->
     <div class="mb-6">
@@ -93,7 +100,7 @@
             h: 'bg-orange-500'
         };
 
-        // Track selected employee for gray-out
+        // Track selected employee for editing and gray-out
         let selectedEmployee = null;
         let employeeSchedules = {};
 
@@ -123,21 +130,30 @@
             }
         }
 
-        // Function to toggle employee 'a's schedule on a date
+        // Function to toggle an employee's schedule on a date
         function toggleDate(year, month, day) {
+            // Check if an employee is selected
+            if (!selectedEmployee) {
+                document.getElementById('no-employee-message').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('no-employee-message').style.display = 'none';
+                }, 3000);
+                return;
+            }
+
             const date = new Date(year, month - 1, day);
             const dateStr = date.toISOString().split('T')[0];
             const dayOfWeek = date.getDay();
-            console.log(`Clicked date: ${dateStr}, Day of week: ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]}`);
+            console.log(`Clicked date: ${dateStr}, Day of week: ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]}, Employee: ${selectedEmployee}`);
 
             // Only allow toggling on weekdays (Mon-Fri: 1-5)
             if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                const index = employeeSchedules['a'].indexOf(dateStr);
+                const index = employeeSchedules[selectedEmployee].indexOf(dateStr);
                 if (index === -1) {
-                    employeeSchedules['a'].push(dateStr);
-                    employeeSchedules['a'].sort();
+                    employeeSchedules[selectedEmployee].push(dateStr);
+                    employeeSchedules[selectedEmployee].sort();
                 } else {
-                    employeeSchedules['a'].splice(index, 1);
+                    employeeSchedules[selectedEmployee].splice(index, 1);
                 }
                 generateCalendars();
             }
@@ -223,12 +239,12 @@
             }
         }
 
-        // Function to toggle employee selection for gray-out
+        // Function to toggle employee selection for editing and gray-out
         function toggleEmployee(employee) {
             if (selectedEmployee === employee) {
-                selectedEmployee = null;
+                selectedEmployee = null; // Deselect if clicked again
             } else {
-                selectedEmployee = employee;
+                selectedEmployee = employee; // Select new employee
             }
 
             const legendItems = document.querySelectorAll('#legend .employee-chip');
@@ -243,11 +259,14 @@
             generateCalendars();
         }
 
-        // Function to show updated schedule for employee 'a'
+        // Function to show updated schedules for all employees
         function showUpdatedSchedule() {
-            const schedule = employeeSchedules['a'].join(';');
-            alert(`Updated schedule for employee 'a':\n${schedule}`);
-            console.log(`Updated schedule for employee 'a':`, employeeSchedules['a']);
+            let message = 'Updated schedules for all employees:\n';
+            Object.keys(employeeSchedules).forEach(emp => {
+                message += `${emp}: ${employeeSchedules[emp].join(';') || 'None'}\n`;
+            });
+            alert(message);
+            console.log('Updated schedules:', employeeSchedules);
         }
 
         // Attach event listener to show schedule button
