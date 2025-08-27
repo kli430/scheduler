@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Shift Calendar Sept-Dec 2025</title>
+    <title>Employee Shift Calendar Sept 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .calendar-grid {
@@ -27,6 +27,13 @@
             text-align: center;
             padding: 0.5rem;
         }
+        .calendar-day.clickable {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calendar-day.clickable:hover {
+            background-color: #f0f9ff;
+        }
         .employee-chip {
             display: inline-block;
             padding: 0.2rem 0.5rem;
@@ -42,11 +49,19 @@
         .employee-chip.legend-selected {
             border: 2px solid #000;
         }
+        #error-message {
+            display: none;
+            color: red;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-6">
-    <h1 class="text-3xl font-bold text-center mb-6">Employee Shift Calendar (Sept-Dec 2025)</h1>
-    <p class="text-center mb-4">Each weekday shows scheduled employees (a-h) with unique colors. Click an employee in the legend to gray out others.</p>
+    <h1 class="text-3xl font-bold text-center mb-6">Employee Shift Calendar (Sept 2025)</h1>
+    <p class="text-center mb-4">Click a weekday to toggle employee 'a's schedule. Click an employee in the legend to gray out others. Click 'Show Updated Schedule' to view employee 'a's current schedule.</p>
+    <div id="error-message">Failed to load schedule data. Please check the CSV file.</div>
+    <button id="show-schedule" class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600">Show Updated Schedule for Employee 'a'</button>
 
     <!-- Legend -->
     <div class="mb-6">
@@ -66,18 +81,6 @@
     <div id="calendars"></div>
 
     <script>
-        // Employee shift schedule data
-        const employeeSchedules = {
-            a: ['2025-09-12', '2025-09-15', '2025-09-24', '2025-09-25', '2025-10-01', '2025-10-09', '2025-10-13', '2025-10-17', '2025-10-22', '2025-11-25', '2025-11-26', '2025-12-02', '2025-12-05', '2025-12-11', '2025-12-19'],
-            b: ['2025-09-03', '2025-09-11', '2025-09-17', '2025-09-19', '2025-09-29', '2025-10-02', '2025-10-09', '2025-10-10', '2025-10-16', '2025-10-30', '2025-11-07', '2025-11-13', '2025-12-16', '2025-12-18', '2025-12-19', '2025-12-22', '2025-12-29'],
-            c: ['2025-09-12', '2025-09-18', '2025-09-25', '2025-10-01', '2025-10-15', '2025-10-20', '2025-10-21', '2025-10-31', '2025-11-05', '2025-11-13', '2025-11-24', '2025-11-25', '2025-12-03', '2025-12-11', '2025-12-15', '2025-12-24', '2025-12-25'],
-            d: ['2025-09-03', '2025-09-10', '2025-09-15', '2025-09-18', '2025-09-23', '2025-09-24', '2025-09-30', '2025-10-06', '2025-10-23', '2025-10-24', '2025-10-28', '2025-11-04', '2025-11-10', '2025-11-11', '2025-11-17', '2025-12-01', '2025-12-04', '2025-12-09', '2025-12-17', '2025-12-23', '2025-12-31'],
-            e: ['2025-09-04', '2025-09-05', '2025-09-08', '2025-10-07', '2025-10-08', '2025-10-15', '2025-10-21', '2025-10-23', '2025-10-27', '2025-10-28', '2025-11-07', '2025-11-11', '2025-11-13', '2025-11-18', '2025-11-19', '2025-12-01', '2025-12-02', '2025-12-04', '2025-12-09', '2025-12-12', '2025-12-16', '2025-12-18', '2025-12-22', '2025-12-23', '2025-12-30'],
-            f: ['2025-09-02', '2025-09-05', '2025-09-09', '2025-09-15', '2025-09-22', '2025-09-26', '2025-10-02', '2025-10-07', '2025-10-16', '2025-10-20', '2025-10-24', '2025-10-31', '2025-11-03', '2025-11-10', '2025-11-16', '2025-11-20', '2025-11-24', '2025-11-27', '2025-11-28', '2025-12-08', '2025-12-10', '2025-12-12', '2025-12-29'],
-            g: ['2025-09-01', '2025-09-02', '2025-09-04', '2025-09-10', '2025-09-16', '2025-09-22', '2025-09-26', '2025-09-29', '2025-09-30', '2025-10-06', '2025-10-08', '2025-10-13', '2025-10-22', '2025-10-27', '2025-10-29', '2025-11-02', '2025-11-09', '2025-11-17', '2025-11-18', '2025-11-19', '2025-11-20', '2025-11-23', '2025-12-03', '2025-12-08', '2025-12-17', '2025-12-24', '2025-12-25', '2025-12-26', '2025-12-31'],
-            h: ['2025-09-09', '2025-09-11', '2025-09-16', '2025-09-17', '2025-09-19', '2025-09-23', '2025-10-03', '2025-10-14', '2025-10-17', '2025-10-29', '2025-10-30', '2025-11-04', '2025-11-09', '2025-11-13', '2025-11-16', '2025-11-26', '2025-12-05', '2025-12-10', '2025-12-15', '2025-12-26', '2025-12-30']
-        };
-
         // Color mapping for employees
         const employeeColors = {
             a: 'bg-blue-500',
@@ -90,8 +93,55 @@
             h: 'bg-orange-500'
         };
 
-        // Track selected employee
+        // Track selected employee for gray-out
         let selectedEmployee = null;
+        let employeeSchedules = {};
+
+        // Function to parse CSV data
+        async function loadSchedule() {
+            try {
+                const response = await fetch('schedule.csv');
+                if (!response.ok) throw new Error('Failed to fetch CSV');
+                const text = await response.text();
+                const lines = text.trim().split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                const data = lines[1].split(',').map(d => d.trim());
+
+                // Map CSV data to employeeSchedules object
+                headers.forEach((emp, index) => {
+                    employeeSchedules[emp] = data[index] ? data[index].split(';').map(date => date.trim()) : [];
+                });
+
+                // Log loaded schedules for debugging
+                console.log('Loaded employee schedules:', employeeSchedules);
+
+                // Generate calendars
+                generateCalendars();
+            } catch (error) {
+                console.error(error);
+                document.getElementById('error-message').style.display = 'block';
+            }
+        }
+
+        // Function to toggle employee 'a's schedule on a date
+        function toggleDate(year, month, day) {
+            const date = new Date(year, month - 1, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const dayOfWeek = date.getDay();
+            console.log(`Clicked date: ${dateStr}, Day of week: ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]}`);
+
+            // Only allow toggling on weekdays (Mon-Fri: 1-5)
+            if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                const index = employeeSchedules['a'].indexOf(dateStr);
+                if (index === -1) {
+                    employeeSchedules['a'].push(dateStr);
+                    employeeSchedules['a'].sort();
+                } else {
+                    employeeSchedules['a'].splice(index, 1);
+                }
+                generateCalendars();
+            }
+        }
 
         // Function to generate calendar for a given month
         function generateCalendar(year, month) {
@@ -100,6 +150,8 @@
             const daysInMonth = lastDay.getDate();
             const startDayOfWeek = firstDay.getDay();
             const monthName = firstDay.toLocaleString('default', { month: 'long' });
+
+            console.log(`Generating calendar for ${monthName} ${year}, first day is ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][startDayOfWeek]} (index ${startDayOfWeek})`);
 
             let html = `<h2 class="text-2xl font-semibold mt-8 mb-4">${monthName} ${year}</h2>`;
             html += '<div class="calendar-grid">';
@@ -117,7 +169,8 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const date = new Date(year, month - 1, day);
                 const dateStr = date.toISOString().split('T')[0];
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                 let employees = [];
 
                 // Find employees scheduled on this date
@@ -130,8 +183,15 @@
                 // Sort employees alphabetically for consistent display
                 employees.sort();
 
+                // Log date and column for debugging
+                console.log(`Date: ${dateStr}, Day: ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek]}, Employees: ${employees.join(', ')}`);
+
                 // Add day cell
-                html += `<div class="calendar-day ${isWeekend ? 'weekend' : ''}">${day}`;
+                html += `<div class="calendar-day ${isWeekend ? 'weekend' : 'clickable'}" `;
+                if (!isWeekend) {
+                    html += `onclick="toggleDate(${year}, ${month}, ${day})"`;
+                }
+                html += `>${day}`;
                 if (!isWeekend && employees.length > 0) {
                     html += '<br>';
                     employees.forEach(emp => {
@@ -153,17 +213,23 @@
             return html;
         }
 
-        // Function to toggle employee selection
+        // Function to generate all calendars
+        function generateCalendars() {
+            const calendarsContainer = document.getElementById('calendars');
+            calendarsContainer.innerHTML = '';
+            // Only generate September 2025 for reduced test data
+            generateCalendar(2025, 9);
+            calendarsContainer.innerHTML += generateCalendar(2025, 9);
+        }
+
+        // Function to toggle employee selection for gray-out
         function toggleEmployee(employee) {
             if (selectedEmployee === employee) {
-                // Deselect if the same employee is clicked
                 selectedEmployee = null;
             } else {
-                // Select the new employee
                 selectedEmployee = employee;
             }
 
-            // Update legend to show selected employee
             const legendItems = document.querySelectorAll('#legend .employee-chip');
             legendItems.forEach(item => {
                 if (item.getAttribute('data-employee') === selectedEmployee) {
@@ -173,19 +239,21 @@
                 }
             });
 
-            // Regenerate calendars with updated colors
-            const calendarsContainer = document.getElementById('calendars');
-            calendarsContainer.innerHTML = '';
-            for (let month = 9; month <= 12; month++) {
-                calendarsContainer.innerHTML += generateCalendar(2025, month);
-            }
+            generateCalendars();
         }
 
-        // Initial calendar generation
-        const calendarsContainer = document.getElementById('calendars');
-        for (let month = 9; month <= 12; month++) {
-            calendarsContainer.innerHTML += generateCalendar(2025, month);
+        // Function to show updated schedule for employee 'a'
+        function showUpdatedSchedule() {
+            const schedule = employeeSchedules['a'].join(';');
+            alert(`Updated schedule for employee 'a':\n${schedule}`);
+            console.log(`Updated schedule for employee 'a':`, employeeSchedules['a']);
         }
+
+        // Attach event listener to show schedule button
+        document.getElementById('show-schedule').addEventListener('click', showUpdatedSchedule);
+
+        // Load and render the schedule
+        loadSchedule();
     </script>
 </body>
 </html>
